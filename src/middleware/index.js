@@ -19,8 +19,8 @@ const comparePassword = async (req, res, next) => {
       res.status(401).json({ message: "Invalid Username" });
       return;
     }
-    unHashedPassword = await bcrypt.compare(req.body.password, user.password);
 
+ req.body.unHashedPassword = await bcrypt.compare(req.body.password, user.password)
     next();
   } catch (error) {
     res.status(501).json({ errorMessage: error.message, error });

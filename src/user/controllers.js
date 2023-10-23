@@ -51,11 +51,11 @@ const login = async (req, res) => {
       });
       return;
     }
-    if (unHashedPassword) {
+    if (req.body.unHashedPassword) {
       res.status(201).json({ message: "Successful login" });
       return;
     }
-    if (!unHashedPassword) {
+    if (!req.body.unHashedPassword) {
       res.status(401).json({ message: "Invalid Password" });
       return;
     }
