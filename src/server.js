@@ -16,7 +16,7 @@ app.use(cors());
 app.use("/user", userRouter);
 
 const syncTables = async () => {
-  await User.sync({ alter: true });
+  await User.sync({ alter: true});
 };
 
 app.get("/health", (req, res) => {
