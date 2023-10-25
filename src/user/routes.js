@@ -18,7 +18,7 @@ userRouter.post("/register", hashPass, register);
 
 userRouter.post("/login", comparePassword, login);
 
-userRouter.get("/admin", tokenCheck, findAllUsers);
+userRouter.get("/admin", findAllUsers); //Add back in tokencheck when cookies are sorted
 
 userRouter.put("/login/updateUsername", tokenCheck, updateUsername);
 

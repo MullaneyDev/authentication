@@ -27,7 +27,7 @@ const register = async (req, res) => {
       return;
     }
     const newUser = await User.create(req.body);
-    res.status(201).json({ message: "success", newUser });
+    res.status(201).json({ message: "User Registered", newUser });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
       res.status(412).json({ message: error.message, error });
@@ -68,6 +68,7 @@ const login = async (req, res) => {
       user: {
         username: req.user.username,
         token: token,
+        isAdmin: req.user.isAdmin,
       },
     });
   } catch (error) {
@@ -82,10 +83,10 @@ const login = async (req, res) => {
 // GET
 const findAllUsers = async (req, res) => {
   try {
-    if (!req.authCheck.isAdmin) {
-      res.status(401).json({ message: "No Admin rights" });
-      return;
-    }
+    // if (!req.authCheck.isAdmin) {
+    //   res.status(401).json({ message: "No Admin rights" });
+    //   return;
+    // }
     const getUsers = await User.findAll();
     if (getUsers.length < 1) {
       res.status(503).json({ message: "No records exist" });
