@@ -35,14 +35,16 @@ const comparePassword = async (req, res, next) => {
 const tokenCheck = async (req, res, next) => {
   try {
     const token = req.header("Authorization").replace("Bearer ", "");
-    const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
-    req.authCheck = await User.findOne({ where: { id: decodedToken.id } });
-    if (!req.authCheck) {
+    const decodedToken = await jwt.verify(token, process.env.SECRET_KEY);
+    req.user = await User.findOne({ where: { id: decodedToken.id } });
+    if (!req.user) {
       res.status(401).json({ message: "Invalid Token" });
       return;
     }
+    req.unHashedPassword = true
     next();
   } catch (error) {
+    console.log(error)
     res.status(501).json({ errorMessage: error.message, error });
   }
 };

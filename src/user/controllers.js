@@ -53,16 +53,15 @@ const login = async (req, res) => {
       });
       return;
     }
+
     const token = await jwt.sign(
       { id: req.user.id, isAdmin: req.user.isAdmin },
       process.env.SECRET_KEY
     );
-
     if (!req.unHashedPassword) {
       res.status(401).json({ message: "Invalid password" });
       return;
     }
-
     res.status(201).json({
       message: "Successful login",
       user: {
@@ -72,6 +71,7 @@ const login = async (req, res) => {
       },
     });
   } catch (error) {
+    console.log(error)
     if (error.name === "SequelizeUniqueConstraintError") {
       res.status(412).json({ message: error.message, error });
       return;
@@ -83,10 +83,10 @@ const login = async (req, res) => {
 // GET
 const findAllUsers = async (req, res) => {
   try {
-    // if (!req.authCheck.isAdmin) {
-    //   res.status(401).json({ message: "No Admin rights" });
-    //   return;
-    // }
+    if (!req.user.isAdmin) {
+      res.status(401).json({ message: "No Admin rights" });
+      return;
+    }
     const getUsers = await User.findAll();
     if (getUsers.length < 1) {
       res.status(503).json({ message: "No records exist" });
