@@ -1,5 +1,7 @@
 const User = require("./model");
 const { findMissingRequiredFields } = require("../utils/utils");
+require("dotenv").config();
+const jwt = require("jsonwebtoken");
 
 // POST
 const register = async (req, res) => {
@@ -15,7 +17,7 @@ const register = async (req, res) => {
       res.status(409).json({ message: "Body is missing" });
       return;
     }
-    const requiredFields = ["username", "email", "password"];
+    const requiredFields = ["username", "email", "password", "isAdmin"];
     const missingFields = findMissingRequiredFields(requiredFields, req.body);
 
     if (missingFields.length >= 1) {
@@ -25,7 +27,7 @@ const register = async (req, res) => {
       return;
     }
     const newUser = await User.create(req.body);
-    res.status(201).json({ message: "success", newUser });
+    res.status(201).json({ message: "User Registered", newUser });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
       res.status(412).json({ message: error.message, error });
@@ -38,7 +40,7 @@ const register = async (req, res) => {
 // POST
 const login = async (req, res) => {
   try {
-    if (req.body === null) {
+    if (!req.user) {
       res.status(409).json({ message: "Body is missing" });
       return;
     }
@@ -51,15 +53,25 @@ const login = async (req, res) => {
       });
       return;
     }
-    if (req.body.unHashedPassword) {
-      res.status(201).json({ message: "Successful login" });
+
+    const token = await jwt.sign(
+      { id: req.user.id, isAdmin: req.user.isAdmin },
+      process.env.SECRET_KEY
+    );
+    if (!req.unHashedPassword) {
+      res.status(401).json({ message: "Invalid password" });
       return;
     }
-    if (!req.body.unHashedPassword) {
-      res.status(401).json({ message: "Invalid Password" });
-      return;
-    }
+    res.status(201).json({
+      message: "Successful login",
+      user: {
+        username: req.user.username,
+        token: token,
+        isAdmin: req.user.isAdmin,
+      },
+    });
   } catch (error) {
+    console.log(error)
     if (error.name === "SequelizeUniqueConstraintError") {
       res.status(412).json({ message: error.message, error });
       return;
@@ -71,19 +83,57 @@ const login = async (req, res) => {
 // GET
 const findAllUsers = async (req, res) => {
   try {
-    const getUsers = await User.findAll();
-    if (getUsers.length >= 1) {
-      res.status(200).json({ message: "success", getUsers });
+    if (!req.user.isAdmin) {
+      res.status(401).json({ message: "No Admin rights" });
       return;
     }
-    res.status(503).json({ message: "No records exist" });
+    const getUsers = await User.findAll();
+    if (getUsers.length < 1) {
+      res.status(503).json({ message: "No records exist" });
+      return;
+    }
+    res.status(200).json({ message: "success", getUsers });
   } catch (error) {
     res.status(503).json({ message: error.message, error });
   }
 };
 
+//PUT
+const updateUsername = async (req, res) => {
+  try {
+    const requiredFields = ["username", "newUsername"];
+    const missingFields = findMissingRequiredFields(requiredFields, req.body);
+
+    if (missingFields.length >= 1) {
+      res
+        .status(409)
+        .json({ message: `${missingFields} is missing from body` });
+      return;
+    }
+
+    const updateUsername = await User.update(
+        {username: req.body.newUsername},{where: {username: req.body.username}}
+    )
+    res.status(201).json({message: "Username updated", updateUsername})
+  } catch (error) {
+    res.status(503).json({ message: error.message, error });
+  }
+};
+
+//DELETE
+const deleteUser = async (req,res) => {
+    try {
+        const deleteUser = await User.destroy({where: {username: req.body.username}})
+        res.status(201).json({message: "User deleted", deleteUser})
+    } catch (error) {
+        res.status(503).json({ message: error.message, error });
+    }
+}
+
 module.exports = {
   register,
   login,
   findAllUsers,
+  updateUsername,
+  deleteUser
 };
