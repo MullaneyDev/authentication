@@ -123,7 +123,7 @@ const updateUsername = async (req, res) => {
 //DELETE
 const deleteUser = async (req,res) => {
     try {
-        const deleteUser = await User.destroy({where: {id: req.user.id}})
+        const deleteUser = await User.destroy({where: {username: req.body.username}})
         res.status(201).json({message: "User deleted", deleteUser})
     } catch (error) {
         res.status(503).json({ message: error.message, error });

@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const saltRounds = parseInt(process.env.SALT_ROUNDS);
 const jwt = require("jsonwebtoken");
+const validator = require("email-validator")
 
 const User = require("../user/model");
 
@@ -33,10 +34,8 @@ const comparePassword = async (req, res, next) => {
 
 const tokenCheck = async (req, res, next) => {
   try {
-    const decodedToken = jwt.verify(
-      req.headers.authorization,
-      process.env.SECRET_KEY
-    );
+    const token = req.header("Authorization").replace("Bearer ", "");
+    const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
     req.authCheck = await User.findOne({ where: { id: decodedToken.id } });
     if (!req.authCheck) {
       res.status(401).json({ message: "Invalid Token" });
@@ -47,8 +46,25 @@ const tokenCheck = async (req, res, next) => {
     res.status(501).json({ errorMessage: error.message, error });
   }
 };
+
+const validateEmail = async (req,res,next) => {
+  const email = req.body.email
+
+  if (!email) {
+    return res.status(400).json({message: 'Email is required'})
+  }
+
+  const isValid = validator.validate(email)
+
+  if (!isValid) {
+    return res.status(400).json({message: "Please enter valid email address"})
+  }
+  next()
+}
+
 module.exports = {
   hashPass,
   comparePassword,
   tokenCheck,
+  validateEmail
 };

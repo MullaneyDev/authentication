@@ -5,6 +5,7 @@ const {
   hashPass,
   comparePassword,
   tokenCheck,
+  validateEmail,
 } = require("../middleware/index");
 const {
   register,
@@ -14,13 +15,13 @@ const {
   deleteUser,
 } = require("./controllers");
 
-userRouter.post("/register", hashPass, register);
+userRouter.post("/register", validateEmail, hashPass, register);
 
 userRouter.post("/login", comparePassword, login);
 
-userRouter.get("/admin", findAllUsers); //Add back in tokencheck when cookies are sorted
+userRouter.get("/admin", tokenCheck, findAllUsers); 
 
-userRouter.put("/login/updateUsername", tokenCheck, updateUsername);
+userRouter.put("/login/updateUsername",  tokenCheck, updateUsername); 
 
 userRouter.delete("/login/delete", tokenCheck, deleteUser);
 
